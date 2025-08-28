@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+
+    environment {
+        // AWS credentials ID in Jenkins
+        AWS_CREDENTIALS_ID = 'aws-credentials'
+
+        // Path to EC2 private key on Jenkins VM
+        EC2_KEY_PATH = '/var/lib/jenkins/.ssh/jenkins-ec2.pem'
+
+        // EC2 host user and IP
+        EC2_HOST = 'ec2-user@3.25.55.127'
+
+        // Docker image info
+        IMAGE_NAME = 'meetly-omni-frontend'
+        ECR_URI = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com/meetly-omni-frontend:latest'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/melissatzt/meetlyomni-frontend.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${IMAGE_NAME}:latest ."
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AWS_CREDENTIALS_ID]]) {
+                    sh '''
+                        $(aws ecr get-login --no-include-email --region ap-southeast-2)
+                        docker tag ${IMAGE_NAME}:latest ${ECR_URI}
+                        docker push ${ECR_URI}
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to EC2') {
+            steps {
+                sh """
+                ssh -i ${EC2_KEY_PATH} ${EC2_HOST} '
+                    # Stop old container if exists
+                    docker stop ${IMAGE_NAME} || true
+                    docker rm ${IMAGE_NAME} || true
+
+                    # Pull latest image from ECR
+                    docker pull ${ECR_URI}
+
+                    # Run container
+                    docker run -d -p 80:3000 --name ${IMAGE_NAME} ${ECR_URI}
+                '
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'FE deployment finished.'
+        }
+    }
+}
