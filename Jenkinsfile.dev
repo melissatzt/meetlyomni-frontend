@@ -19,7 +19,16 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/melissatzt/meetlyomni-frontend.git'
+                checkout scm
+            }
+        }
+        
+        stage('Install & Test') {
+            steps {
+                sh '''
+                    npm install
+                    npm run test
+                '''
             }
         }
 
@@ -33,7 +42,7 @@ pipeline {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AWS_CREDENTIALS_ID]]) {
                     sh '''
-                        $(aws ecr get-login --no-include-email --region ap-southeast-2)
+                        $(aws ecr get-login-password --no-include-email --region ap-southeast-2)
                         docker tag ${IMAGE_NAME}:latest ${ECR_URI}
                         docker push ${ECR_URI}
                     '''
@@ -42,6 +51,9 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
+            when {
+                branch 'dev'
+            }
             steps {
                 sh """
                 ssh -i ${EC2_KEY_PATH} ${EC2_HOST} '
