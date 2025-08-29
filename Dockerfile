@@ -13,7 +13,7 @@ COPY package.json package-lock.json* ./
 ENV HUSKY=0
 
 # Install only production dependencies (no dev)
-RUN npm set-script prepare "" && npm ci --omit=dev
+RUN npm ci --omit=dev --ignore-scripts
 
 # Rebuild the source code only when needed
 FROM base AS builder
