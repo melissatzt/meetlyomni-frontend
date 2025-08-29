@@ -22,6 +22,7 @@ describe('authApi', () => {
   beforeEach(() => {
     mockFetch.mockClear();
     // Reset environment variable
+    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', '');
     vi.unstubAllEnvs();
   });
 
@@ -46,8 +47,6 @@ describe('authApi', () => {
     });
 
     it('should use default API_BASE_URL when not provided', async () => {
-      vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', '');
-
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue({ user: mockUser }),
