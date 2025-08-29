@@ -48,6 +48,11 @@ pipeline {
                 ssh -i ${EC2_KEY_PATH} ${EC2_HOST} '
                     aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
+                    OLD_CONTAINER=\$(docker ps -q --filter "publish=80")
+                    if [ ! -z "\$OLD_CONTAINER" ]; then
+                        docker rm -f \$OLD_CONTAINER
+                    fi
+
                     docker stop ${IMAGE_NAME} || true
                     docker rm ${IMAGE_NAME} || true
 
