@@ -1,0 +1,59 @@
+name: Deploy Frontend to EC2
+
+on:
+  push:
+    branches:
+      - dev
+
+env:
+  NODE_ENV: production
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
+            --build-arg NODE_ENV=${NODE_ENV} \
+            -t ${IMAGE_NAME}:latest .
+
+      - name: Tag and Push Docker Image
+        run: |
+          docker tag ${IMAGE_NAME}:latest ${ECR_URI}
+          docker push ${ECR_URI}
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+            docker pull ${ECR_URI}
+            docker rm -f ${IMAGE_NAME}-new || true
+            docker run -d -p 3001:3000 --name ${IMAGE_NAME}-new ${ECR_URI}
+            echo "Waiting for new container to start..."
+            sleep 5
+            docker stop ${IMAGE_NAME} || true
+            docker rename ${IMAGE_NAME}-new ${IMAGE_NAME}
