@@ -10,17 +10,18 @@ pipeline {
         ECR_URI = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com/meetly-omni-frontend:latest'
         NEXT_PUBLIC_API_BASE_URL = 'https://api-dev.meetlyomni.com'
         NODE_ENV = 'production'
-        TEMP_PORT = '3001'
     }
 
     stages {
         stage('Checkout') {
+            agent { label 'master' }
             steps {
                 checkout scm
             }
         }
 
         stage('Build Docker Image') {
+            agent { label 'docker-build-agent' }
             steps {
                 sh """
                 docker build \
@@ -32,6 +33,7 @@ pipeline {
         }
 
         stage('Push to ECR') {
+            agent { label 'docker-build-agent' }
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AWS_CREDENTIALS_ID]]) {
                     sh '''
@@ -44,28 +46,18 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
+            agent { label 'deploy-agent' }
             steps {
                 sh """
                 ssh -i ${EC2_KEY_PATH} ${EC2_HOST} '
                     set -e
-
                     aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                     docker pull ${ECR_URI}
-
-                    # clean up any leftover "-new" container
                     docker rm -f ${IMAGE_NAME}-new || true
-
-                    # start new container on temp port
                     docker run -d -p ${TEMP_PORT}:3000 --name ${IMAGE_NAME}-new ${ECR_URI}
-
                     echo "Waiting for new container to start..."
                     sleep 5
-
-                    # stop and remove old container
                     docker stop ${IMAGE_NAME} || true
-                    docker rm ${IMAGE_NAME} || true
-
-                    # rename new container to the final name
                     docker rename ${IMAGE_NAME}-new ${IMAGE_NAME}
                 '
                 """
