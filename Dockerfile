@@ -21,6 +21,11 @@ WORKDIR /app
 
 # Copy package files and install ALL dependencies (including dev deps for build)
 COPY package.json package-lock.json* ./
+
+# Disable Husky for CI builds
+ENV HUSKY=0
+
+# Install all dependencies (including dev)
 RUN npm ci
 
 # Build-time env for Next.js
