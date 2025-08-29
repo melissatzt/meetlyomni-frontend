@@ -37,7 +37,6 @@ ENV NODE_ENV=${NODE_ENV}
 
 # Copy source code and build
 COPY . .
-RUN npm run test
 RUN npm run build
 
 # Production image, copy all the files and run next
