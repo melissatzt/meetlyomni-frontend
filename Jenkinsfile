@@ -47,14 +47,19 @@ pipeline {
             steps {
                 sh """
                 ssh -i ${EC2_KEY_PATH} ${EC2_HOST} '
+                    set -e
+
                     aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                     docker pull ${ECR_URI}
+                    docker rm -f ${IMAGE_NAME}-new || true
+
                     docker run -d -p ${TEMP_PORT}:3000 --name ${IMAGE_NAME}-new ${ECR_URI}
+
+                    echo "Waiting for new container to start..."
+                    sleep 5
+
                     docker stop ${IMAGE_NAME} || true
-                    docker rm ${IMAGE_NAME} || true
-                    docker run -d -p 80:3000 --name ${IMAGE_NAME} ${ECR_URI}
-                    docker stop ${IMAGE_NAME}-new || true
-                    docker rm ${IMAGE_NAME}-new || true
+                    docker rename ${IMAGE_NAME}-new ${IMAGE_NAME}
                 '
                 """
             }
