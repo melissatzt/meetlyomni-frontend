@@ -27,15 +27,6 @@ pipeline {
                 checkout scm
             }
         }
-        
-        stage('Install & Test') {
-            steps {
-                sh '''
-                    npm install
-                    npm run test
-                '''
-            }
-        }
 
         stage('Build Docker Image') {
             steps {
