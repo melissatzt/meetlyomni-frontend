@@ -14,6 +14,9 @@ pipeline {
         // Docker image info
         IMAGE_NAME = 'meetly-omni-frontend'
         ECR_URI = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com/meetly-omni-frontend:latest'
+    
+        // Frontend API URL
+        NEXT_PUBLIC_API_BASE_URL = 'https://api-dev.meetlyomni.com'
     }
 
     stages {
@@ -34,7 +37,11 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:latest ."
+                sh """
+                docker build \
+                --build-arg NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
+                -t ${IMAGE_NAME}:latest .
+                """
             }
         }
 
