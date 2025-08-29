@@ -27,6 +27,9 @@ RUN npm ci
 ARG NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 
+ARG NODE_ENV
+ENV NODE_ENV=${NODE_ENV}
+
 # Copy source code and build
 COPY . .
 RUN npm run build
@@ -34,8 +37,6 @@ RUN npm run build
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
-
-ENV NODE_ENV=production
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs

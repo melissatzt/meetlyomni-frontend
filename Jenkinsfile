@@ -17,6 +17,8 @@ pipeline {
     
         // Frontend API URL
         NEXT_PUBLIC_API_BASE_URL = 'https://api-dev.meetlyomni.com'
+
+        NODE_ENV = 'development'
     }
 
     stages {
@@ -40,6 +42,7 @@ pipeline {
                 sh """
                 docker build \
                 --build-arg NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
+                --build-arg NODE_ENV=${NODE_ENV} \
                 -t ${IMAGE_NAME}:latest .
                 """
             }
