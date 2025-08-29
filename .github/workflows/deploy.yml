@@ -7,7 +7,6 @@ on:
 
 env:
   NODE_ENV: production
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -22,12 +21,14 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
         run: |
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
 
       - name: Build Docker Image
         run: |
@@ -35,16 +36,23 @@ jobs:
             --build-arg NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
             --build-arg NODE_ENV=${NODE_ENV} \
             -t ${IMAGE_NAME}:latest .
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL }}
+          IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+          NODE_ENV: ${{ env.NODE_ENV }}
 
       - name: Tag and Push Docker Image
         run: |
           docker tag ${IMAGE_NAME}:latest ${ECR_URI}
           docker push ${ECR_URI}
+        env:
+          IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+          ECR_URI: ${{ vars.ECR_REGISTRY }}/meetly-omni-frontend:latest
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ env.EC2_HOST }}
+          host: ${{ vars.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
@@ -57,3 +65,8 @@ jobs:
             sleep 5
             docker stop ${IMAGE_NAME} || true
             docker rename ${IMAGE_NAME}-new ${IMAGE_NAME}
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+          IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+          ECR_URI: ${{ vars.ECR_REGISTRY }}/meetly-omni-frontend:latest
