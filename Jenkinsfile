@@ -6,6 +6,7 @@ pipeline {
         EC2_KEY_PATH = '/var/lib/jenkins/.ssh/jenkins-ec2.pem'
         EC2_HOST = 'ec2-user@3.25.55.127'
         IMAGE_NAME = 'meetly-omni-frontend'
+        ECR_REGISTRY = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com'
         ECR_URI = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com/meetly-omni-frontend:latest'
         NEXT_PUBLIC_API_BASE_URL = 'https://api-dev.meetlyomni.com'
         NODE_ENV = 'production'
@@ -33,7 +34,7 @@ pipeline {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AWS_CREDENTIALS_ID]]) {
                     sh '''
-                        $(aws ecr get-login-password --no-include-email --region ap-southeast-2)
+                        $(aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin $ECR_REGISTRY)
                         docker tag ${IMAGE_NAME}:latest ${ECR_URI}
                         docker push ${ECR_URI}
                     '''
