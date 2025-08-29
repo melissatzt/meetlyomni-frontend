@@ -8,6 +8,11 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
+
+# Disable Husky for CI builds
+ENV HUSKY=0
+
+# Install only production dependencies (no dev)
 RUN npm ci --omit=dev
 
 # Rebuild the source code only when needed
@@ -17,6 +22,10 @@ WORKDIR /app
 # Copy package files and install ALL dependencies (including dev deps for build)
 COPY package.json package-lock.json* ./
 RUN npm ci
+
+# Build-time env for Next.js
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 
 # Copy source code and build
 COPY . .
