@@ -51,14 +51,21 @@ pipeline {
 
                     aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                     docker pull ${ECR_URI}
+
+                    # clean up any leftover "-new" container
                     docker rm -f ${IMAGE_NAME}-new || true
 
+                    # start new container on temp port
                     docker run -d -p ${TEMP_PORT}:3000 --name ${IMAGE_NAME}-new ${ECR_URI}
 
                     echo "Waiting for new container to start..."
                     sleep 5
 
+                    # stop and remove old container
                     docker stop ${IMAGE_NAME} || true
+                    docker rm ${IMAGE_NAME} || true
+
+                    # rename new container to the final name
                     docker rename ${IMAGE_NAME}-new ${IMAGE_NAME}
                 '
                 """
