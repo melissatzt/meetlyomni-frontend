@@ -22,7 +22,6 @@ describe('authApi', () => {
   beforeEach(() => {
     mockFetch.mockClear();
     // Reset environment variable
-    vi.unstubAllEnvs();
     vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', '');
   });
 
