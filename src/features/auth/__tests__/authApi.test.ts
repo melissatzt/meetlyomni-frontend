@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loginApi } from '../authApi';
 import type { LoginCredentials, User } from '../types';
 
+// Reset environment variable
+vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', '');
+
 // Mock global fetch
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -21,8 +24,6 @@ describe('authApi', () => {
 
   beforeEach(() => {
     mockFetch.mockClear();
-    // Reset environment variable
-    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', '');
   });
 
   describe('loginApi', () => {
