@@ -22,7 +22,7 @@ describe('authApi', () => {
   beforeEach(() => {
     mockFetch.mockClear();
     // Reset environment variable
-    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', '');
+    vi.unstubAllEnvs();
   });
 
   describe('loginApi', () => {
