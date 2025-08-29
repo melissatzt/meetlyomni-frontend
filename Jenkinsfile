@@ -2,22 +2,12 @@ pipeline {
     agent any
 
     environment {
-        // AWS credentials ID in Jenkins
         AWS_CREDENTIALS_ID = 'aws-credentials'
-
-        // Path to EC2 private key on Jenkins VM
         EC2_KEY_PATH = '/var/lib/jenkins/.ssh/jenkins-ec2.pem'
-
-        // EC2 host user and IP
         EC2_HOST = 'ec2-user@3.25.55.127'
-
-        // Docker image info
         IMAGE_NAME = 'meetly-omni-frontend'
         ECR_URI = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com/meetly-omni-frontend:latest'
-    
-        // Frontend API URL
         NEXT_PUBLIC_API_BASE_URL = 'https://api-dev.meetlyomni.com'
-
         NODE_ENV = 'production'
     }
 
