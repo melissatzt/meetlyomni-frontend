@@ -18,7 +18,7 @@ pipeline {
         // Frontend API URL
         NEXT_PUBLIC_API_BASE_URL = 'https://api-dev.meetlyomni.com'
 
-        NODE_ENV = 'development'
+        NODE_ENV = 'production'
     }
 
     stages {
