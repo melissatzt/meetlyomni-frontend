@@ -10,6 +10,7 @@ pipeline {
         ECR_URI = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com/meetly-omni-frontend:latest'
         NEXT_PUBLIC_API_BASE_URL = 'https://api-dev.meetlyomni.com'
         NODE_ENV = 'production'
+        TEMP_PORT = '3001'
     }
 
     stages {
@@ -48,19 +49,17 @@ pipeline {
                 ssh -i ${EC2_KEY_PATH} ${EC2_HOST} '
                     aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-                    OLD_CONTAINER=\$(docker ps -q --filter "publish=80")
-                    if [ ! -z "\$OLD_CONTAINER" ]; then
-                        docker rm -f \$OLD_CONTAINER
-                    fi
+                    # Run new container on temporary port
+                    docker pull ${ECR_URI}
+                    docker run -d -p ${TEMP_PORT}:3000 --name ${IMAGE_NAME}-new ${ECR_URI}
 
+                    # Stop and remove old container
                     docker stop ${IMAGE_NAME} || true
                     docker rm ${IMAGE_NAME} || true
 
-                    docker pull ${ECR_URI}
-
-                    docker image prune -af || true
-                    docker container prune -f || true
-
+                    # Rename new container to main name and rebind to port 80
+                    docker rename ${IMAGE_NAME}-new ${IMAGE_NAME}
+                    docker stop ${IMAGE_NAME} || true
                     docker run -d -p 80:3000 --name ${IMAGE_NAME} ${ECR_URI}
                 '
                 """
