@@ -46,22 +46,16 @@ pipeline {
             steps {
                 sh """
                 ssh -i ${EC2_KEY_PATH} ${EC2_HOST} '
-                    # Log in to ECR
                     aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-                    # Stop old container if exists
                     docker stop ${IMAGE_NAME} || true
                     docker rm ${IMAGE_NAME} || true
 
-                    # Pull latest image from ECR
                     docker pull ${ECR_URI}
 
-                    # Free port 80 if in use
-                    if lsof -i :80 >/dev/null; then
-                        sudo fuser -k 80/tcp
-                    fi
+                    docker image prune -af || true
+                    docker container prune -f || true
 
-                    # Run container
                     docker run -d -p 80:3000 --name ${IMAGE_NAME} ${ECR_URI}
                 '
                 """
