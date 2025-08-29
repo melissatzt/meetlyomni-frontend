@@ -43,9 +43,6 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
-            when {
-                branch 'dev'
-            }
             steps {
                 sh """
                 ssh -i ${EC2_KEY_PATH} ${EC2_HOST} '
