@@ -20,11 +20,15 @@ pipeline {
         }
 
         stage('Run Tests') {
-             steps {
-                sh 'HUSKY_SKIP_INSTALL=1 npm install'
-                sh 'npm run test'
+            agent { label 'build-agent' }
+            steps {
+                withEnv(['HUSKY_SKIP_INSTALL=1']) {
+                    sh 'npm install'
+                    sh 'npm run test'
+                }
             }
         }
+
 
         stage('Build Docker Image') {
             agent { label 'build-agent' } 
