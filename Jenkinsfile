@@ -4,7 +4,6 @@ pipeline {
     environment {
         AWS_CREDENTIALS_ID = 'aws-credentials'
         IMAGE_NAME = 'meetly-omni-frontend'
-        EC2_KEY_PATH = '/home/jenkins/.ssh/jenkins-ec2.pem'
         EC2_HOST = 'ec2-user@3.25.55.127'
         ECR_REGISTRY = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com'
         ECR_URI = "${ECR_REGISTRY}/${IMAGE_NAME}:latest"
@@ -56,8 +55,9 @@ pipeline {
         stage('Deploy to EC2') {
             agent { label 'deploy-agent' }
             steps {
+            sshagent(['ec2-deploy-key']) {
                 sh """
-                ssh -i ${EC2_KEY_PATH} ${EC2_HOST} '
+                ssh -o StrictHostKeyChecking=no ${EC2_HOST} '
                     set -e
                     aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                     docker pull ${ECR_URI}
@@ -67,6 +67,7 @@ pipeline {
                     echo "Deployment successful!"
                 '
                 """
+                }
             }
         }
     }
