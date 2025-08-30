@@ -53,12 +53,10 @@ pipeline {
                     set -e
                     aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                     docker pull ${ECR_URI}
-                    docker rm -f ${IMAGE_NAME}-new || true
-                    docker run -d -p ${TEMP_PORT}:3000 --name ${IMAGE_NAME}-new ${ECR_URI}
-                    echo "Waiting for new container to start..."
-                    sleep 5
                     docker stop ${IMAGE_NAME} || true
-                    docker rename ${IMAGE_NAME}-new ${IMAGE_NAME}
+                    docker rm -f ${IMAGE_NAME} || true
+                    docker run -d -p 3000:3000 --name ${IMAGE_NAME} ${ECR_URI}
+                    echo "Deployment successful!"
                 '
                 """
             }
