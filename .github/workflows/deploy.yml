@@ -55,20 +55,28 @@ jobs:
           script: |
             set -e
 
-            # Login to ECR on EC2
-            export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            export AWS_REGION=ap-southeast-2
-            aws ecr get-login-password --region ${AWS_REGION} | \
-              docker login --username AWS --password-stdin ${{ vars.ECR_REGISTRY }}
+            # Pull GitHub repo variables into shell variables
+            IMAGE_NAME="${{ vars.IMAGE_NAME }}"
+            ECR_REGISTRY="${{ vars.ECR_REGISTRY }}"
+            AWS_REGION=${{ vars.AWS_REGION }}
 
-            # Pull, run, swap container
-            docker pull ${{ vars.ECR_REGISTRY }}/meetly-omni-frontend:latest
-            docker rm -f ${IMAGE_NAME}-new || true
-            docker run -d -p 3001:3000 --name ${IMAGE_NAME}-new ${{ vars.ECR_REGISTRY }}/meetly-omni-frontend:latest
+            export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+            export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            export AWS_REGION="$AWS_REGION"
+
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+            docker pull $ECR_REGISTRY/$IMAGE_NAME:latest
+
+            NEW_CONTAINER="${IMAGE_NAME}-new"
+            docker rm -f $NEW_CONTAINER || true
+            docker run -d -p 3001:3000 --name $NEW_CONTAINER $ECR_REGISTRY/$IMAGE_NAME:latest
+
             echo "Waiting for new container to start..."
             sleep 5
-            docker stop ${IMAGE_NAME} || true
-            docker rename ${IMAGE_NAME}-new ${IMAGE_NAME}
-        env:
-          IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+
+            # Stop old container and rename new
+            docker stop $IMAGE_NAME || true
+            docker rename $NEW_CONTAINER $IMAGE_NAME
+
+            echo "Deployment successful!"
