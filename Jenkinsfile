@@ -21,7 +21,7 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            agent { label 'deploy-agent' }
+            agent { label 'build-agent' } 
             steps {
                 sh """
                 docker build \
