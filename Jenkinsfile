@@ -3,12 +3,12 @@ pipeline {
 
     environment {
         AWS_CREDENTIALS_ID = 'aws-credentials'
+        IMAGE_NAME = 'meetly-omni-frontend'
         EC2_KEY_PATH = '/var/lib/jenkins/.ssh/jenkins-ec2.pem'
         EC2_HOST = 'ec2-user@3.25.55.127'
-        IMAGE_NAME = 'meetly-omni-frontend'
         ECR_REGISTRY = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com'
         ECR_URI = "${ECR_REGISTRY}/${IMAGE_NAME}:latest"
-        NEXT_PUBLIC_API_BASE_URL = 'https://api-dev.meetlyomni.com'
+        NEXT_PUBLIC_API_BASE_URL = 'https://api-uat.meetlyomni.com'
         NODE_ENV = 'production'
     }
 
