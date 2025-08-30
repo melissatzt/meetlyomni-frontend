@@ -23,7 +23,7 @@ pipeline {
             agent { label 'build-agent' }
             steps {
                 withEnv(['HUSKY_SKIP_INSTALL=1']) {
-                    sh 'npm install'
+                    sh 'npm ci'
                     sh 'npm run test'
                 }
             }
