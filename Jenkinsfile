@@ -22,7 +22,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh 'npm ci --ignore-scripts'
-                sh 'npm run test'
+                sh 'npx vitest run'
             }
         }
 
