@@ -7,6 +7,7 @@ on:
 
 env:
   NODE_ENV: production
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -57,7 +58,12 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
+            export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            export AWS_REGION=${{ vars.AWS_REGION }}
+
             aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
             docker pull ${ECR_URI}
             docker rm -f ${IMAGE_NAME}-new || true
             docker run -d -p 3001:3000 --name ${IMAGE_NAME}-new ${ECR_URI}
@@ -66,7 +72,6 @@ jobs:
             docker stop ${IMAGE_NAME} || true
             docker rename ${IMAGE_NAME}-new ${IMAGE_NAME}
         env:
-          AWS_REGION: ${{ vars.AWS_REGION }}
           ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
           IMAGE_NAME: ${{ vars.IMAGE_NAME }}
           ECR_URI: ${{ vars.ECR_REGISTRY }}/meetly-omni-frontend:latest
