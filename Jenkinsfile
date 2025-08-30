@@ -7,21 +7,21 @@ pipeline {
         EC2_HOST = 'ec2-user@3.25.55.127'
         IMAGE_NAME = 'meetly-omni-frontend'
         ECR_REGISTRY = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com'
-        ECR_URI = '381492242095.dkr.ecr.ap-southeast-2.amazonaws.com/meetly-omni-frontend:latest'
+        ECR_URI = "${ECR_REGISTRY}/${IMAGE_NAME}:latest"
         NEXT_PUBLIC_API_BASE_URL = 'https://api-dev.meetlyomni.com'
         NODE_ENV = 'production'
     }
 
     stages {
         stage('Checkout') {
-            // agent { label 'master' }
+            agent { label 'jenkins-agent' }
             steps {
                 checkout scm
             }
         }
 
         stage('Build Docker Image') {
-            // agent { label 'docker-build-agent' }
+            agent { label 'jenkins-agent' }
             steps {
                 sh """
                 docker build \
@@ -33,7 +33,7 @@ pipeline {
         }
 
         stage('Push to ECR') {
-            // agent { label 'docker-build-agent' }
+            agent { label 'jenkins-agent' }
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AWS_CREDENTIALS_ID]]) {
                     sh '''
@@ -46,7 +46,7 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
-            // agent { label 'deploy-agent' }
+            agent { label 'jenkins-agent' }
             steps {
                 sh """
                 ssh -i ${EC2_KEY_PATH} ${EC2_HOST} '
