@@ -21,7 +21,8 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh 'HUSKY=0 npm ci'
+                sh 'npm ci --ignore-scripts'
+                sh 'npm install --include=dev'
                 sh 'npx vitest run'
             }
         }
