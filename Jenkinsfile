@@ -20,6 +20,14 @@ pipeline {
             }
         }
 
+        stage('Run Tests') {
+            agent { label 'build-agent' }
+            steps {
+                sh 'npm install'
+                sh 'npm run test'
+            }
+        }
+
         stage('Build Docker Image') {
             agent { label 'build-agent' } 
             steps {
