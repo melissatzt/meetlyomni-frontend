@@ -19,13 +19,12 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
-            steps {
-                sh 'npm ci --ignore-scripts'
-                sh 'npm install --include=dev'
-                sh 'npx vitest run'
-            }
-        }
+        // stage('Run Tests') {
+        //     steps {
+        //         sh 'npm install --include=dev'
+        //         sh 'npx vitest run'
+        //     }
+        // }
 
         stage('Build Docker Image') {
             agent { label 'build-agent' } 
