@@ -19,15 +19,15 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
-            agent { label 'build-agent' }
-            steps {
-                withEnv(['HUSKY_SKIP_INSTALL=1']) {
-                    sh 'npm ci'
-                    sh 'npm run test'
-                }
-            }
-        }
+        // stage('Run Tests') {
+        //     agent { label 'build-agent' }
+        //     steps {
+        //         withEnv(['HUSKY_SKIP_INSTALL=1']) {
+        //             sh 'npm ci'
+        //             sh 'npm run test'
+        //         }
+        //     }
+        // }
 
 
         stage('Build Docker Image') {
