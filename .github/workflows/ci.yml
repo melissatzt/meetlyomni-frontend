@@ -29,7 +29,9 @@ jobs:
         run: npm pkg delete scripts.prepare
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm install --save-dev vitest
 
       - name: Run tests
         run: npm run test
