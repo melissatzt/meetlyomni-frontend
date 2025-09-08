@@ -11,7 +11,7 @@ import QRCodeComponent from './QRCode';
 
 vi.mock('qrcode', () => ({
   default: {
-    toDataURL: vi.fn(),
+    toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,FAKE_QR_CODE'),
   },
 }));
 
