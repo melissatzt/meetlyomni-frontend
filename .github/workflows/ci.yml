@@ -25,9 +25,10 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: |
-          HUSKY=0 npm ci
+      - name: Install dependencies (skip husky)
+        run: npm ci
+        env:
+          HUSKY: 0
 
       - name: Run tests
         run: npm run test
