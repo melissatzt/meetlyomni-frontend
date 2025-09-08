@@ -5,6 +5,13 @@ on:
     branches:
       - dev
 
+env:
+  IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL }}
+  NODE_ENV: production
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -29,5 +36,26 @@ jobs:
 
       - name: Build project
         run: npm run build
-        env:
-          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=${{ env.NEXT_PUBLIC_API_BASE_URL }} \
+            --build-arg NODE_ENV=${{ env.NODE_ENV }} \
+            -t ${{ env.IMAGE_NAME }}:latest .
+
+      - name: Tag and push image to Amazon ECR
+        run: |
+          docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
